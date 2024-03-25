@@ -87,8 +87,9 @@ class NFA {
     });
   }
   unionNFA(smallnfa, stackelements) {
-    let tStart = "qs";
-    let tFinal = "qf";
+    // console.log("union stavk", stackelements);
+    let tStart = createNewState(stackelements);
+    let tFinal = createNewState(stackelements);
     this.addState(tStart);
     this.addState(tFinal);
 
@@ -247,7 +248,7 @@ function regexToENFA(regex) {
           // return;
           // console.log("unionNFA");
           // console.log(nfa1, nfa2);
-          nfa2.unionNFA(nfa1, nfaStack);
+          nfa2.unionNFA(nfa1, states);
           nfaStack.push(nfa2);
         } else if (nfa2 == "(") {
           nfaStack.push(nfa1);
