@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.1/p5.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TOC</title>
@@ -14,92 +15,97 @@
     />
   </head>
   <body>
-    <div id="section-1">
-      <div id="container-1" class="define-container regex-container">
-        <div class="link-btn-container">
-          <button class="link-btn" type="button" onclick="toggleDivs()">
-            make automata from table
-          </button>
-        </div>
-        <h4>Regular Expression</h4>
-        <div class="regex">
-          <form action="">
-            <div class="inp-container-regex">
-              <input
-                class="input-style"
-                type="text"
-                name="regexpinput"
-                id="regexpinput"
-                placeholder="Enter Regular Expression"
-                value="(a+b)"
-              />
-            </div>
-            <div class="mydict">
-              <div>
-                <label>
-                  <input type="radio" name="radio" checked="" />
-                  <span>e-NFA</span>
-                </label>
-                <label>
-                  <input type="radio" name="radio" />
-                  <span>NFA</span>
-                </label>
-                <label>
-                  <input type="radio" name="radio" />
-                  <span>DFA</span>
-                </label>
-
-                <label>
-                  <input type="radio" name="radio" />
-                  <span>min-DFA</span>
-                </label>
+    <div class="main-view">
+      <div id="section-1">
+        <div id="container-1" class="define-container regex-container">
+          <div class="link-btn-container">
+            <button class="link-btn" type="button" onclick="toggleDivs()">
+              make automata from table
+            </button>
+          </div>
+          <h4>Regular Expression</h4>
+          <div class="regex">
+            <form action="">
+              <div class="inp-container-regex">
+                <input
+                  class="input-style"
+                  type="text"
+                  name="regexpinput"
+                  id="regexpinput"
+                  placeholder="Enter Regular Expression"
+                  value="(a|b)*"
+                />
               </div>
-            </div>
+              <div class="mydict">
+                <div>
+                  <label>
+                    <input type="radio" value="0" name="faradio" />
+                    <span>e-NFA</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="faradio" value="1" checked="" />
+                    <span>NFA</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="faradio" value="2" />
+                    <span>DFA</span>
+                  </label>
 
-            <div class="btn-container-regex">
-              <button id="createButton" class="button-9" type="button">
-                create
-              </button>
-            </div>
-          </form>
+                  <label>
+                    <input type="radio" name="faradio" value="3" />
+                    <span>min-DFA</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="btn-container-regex">
+                <button id="createNfaButton" class="button-9" type="button">
+                  create
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div style="display: none" id="section-2">
-      <div id="container-2" class="define-container">
-        <div class="link-btn-container">
-          <button id="" class="link-btn" type="button" onclick="toggleDivs()">
-            make automata from regular expression
-          </button>
+      <div style="display: none" id="section-2">
+        <div id="container-2" class="define-container">
+          <div class="link-btn-container">
+            <button id="" class="link-btn" type="button" onclick="toggleDivs()">
+              make automata from regular expression
+            </button>
+          </div>
+          <h4>Define Automata</h4>
+          <div class="automata">
+            <form action="">
+              <div class="inp-container">
+                <label for="alphabets" style="font-size: 22px; font-weight: 600"
+                  >Σ =
+                </label>
+                <input
+                  class="input-style"
+                  type="text"
+                  name="alphabets"
+                  id="alphabets-input"
+                  placeholder="Enter Alphabets"
+                  value="0,1"
+                />
+                <button class="alphabet-btn" type="button" id="alphabet-btn">
+                  Make
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-        <h4>Define Automata</h4>
-        <div class="automata">
-          <form action="">
-            <div class="inp-container">
-              <label for="alphabets" style="font-size: 22px; font-weight: 600"
-                >Σ =
-              </label>
-              <input
-                class="input-style"
-                type="text"
-                name="alphabets"
-                id="alphabets-input"
-                placeholder="Enter Alphabets"
-                value="0,1"
-              />
-              <button class="alphabet-btn" type="button" id="alphabet-btn">
-                Make
-              </button>
-            </div>
-          </form>
-        </div>
+        <div id="alphabet-nfa-table"></div>
       </div>
-      <div id="alphabet-nfa-table"></div>
+      <div id="canvasContainer" class="canvas"></div>
     </div>
 
     <script src="./scripts/nfa.js"></script>
+    <script src="./scripts/converters.js"></script>
     <script src="./scripts/regexform.js"></script>
     <script src="./scripts/eventlistners.js"></script>
+    <script src="./scripts/drawGraph.js"></script>
   </body>
 </html>

@@ -1,3 +1,8 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 body {
   background-color: #f0eeee;
   font-family: "Poppins", sans-serif;
@@ -98,5 +103,21 @@ td {
   padding: 1em;
   width: fit-content;
   border-radius: 10px;
+  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+}
+
+/* main view */
+
+.main-view {
+  display: flex;
+}
+.canvas {
+  width: 100%;
+  margin: 0.5em;
+  margin-top: 20px;
+  padding: 1em;
+  background-color: #ffffff;
+  border-radius: 10px;
+  border: 2px dotted #666;
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
 }
