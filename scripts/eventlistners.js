@@ -1,7 +1,7 @@
 document
   .getElementById("createNfaButton")
   .addEventListener("click", function () {
-    let regex = document.getElementById("regexpinput").value;
+    const regex = document.getElementById("regexpinput").value;
     let radios = document.getElementsByName("faradio");
     let selected = "0";
     for (let i = 0; i < radios.length; i++) {
@@ -12,16 +12,16 @@ document
       }
     }
     if (selected == "0") {
-      let enfa = regexToENFA(regex);
-      console.log("enfa created", enfa);
-      drawGraph(enfa[0]);
+      const enfa = regexToENFA(regex)[0];
+      console.log("enfa created", enfa.transitions);
+      drawGraph(enfa);
     } else if (selected == "1") {
-      let enfa = regexToENFA(regex)[0];
+      const enfa = regexToENFA(regex)[0];
       console.log("enfa created", enfa);
-      let nfa = removeEpsilonTransitions(enfa);
+      const nfa = removeEpsilonTransitions(enfa);
       console.log("emoves removd", nfa);
 
-      // drawGraph(nfa[0]);
+      drawGraph(nfa);
     } else if (selected == "2") {
     } else if (selected == "3") {
     }

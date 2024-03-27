@@ -209,6 +209,7 @@ function regexToENFA(regex) {
       let nfa1 = nfaStack.pop();
       nfa1 = nfa1.plusNFA(states);
       nfaStack.push(nfa1);
+      console.log(nfaStack);
     } else if (token == "*") {
       let nfa1 = nfaStack.pop();
       // console.log(nfa1);

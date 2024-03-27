@@ -25,6 +25,42 @@ function removeEpsilonTransitions(enfa) {
     ctable.set(state, epsilonClosure(state));
   }
   console.log("ctable", ctable);
+  //   mega transaction
+  let megaTrans = new Map();
+  for (let state of enfa.states) {
+    for (let input of enfa.alphabet) {
+      let megaClosure = new Set();
+      megaClosure = megaClosure.union(ctable.get(state));
+      let _abc = enfa.transitions.get(`${state}-${input}`) || [];
+      megaClosure = megaClosure.union(new Set(_abc));
+      for (let closureState of megaClosure) {
+        let _xyz = enfa.transitions.get(`${closureState}-${input}`) || [];
+        for (let _state of _xyz) {
+          megaClosure.add(_state);
+          megaClosure = megaClosure.union(epsilonClosure(_state));
+        }
+      }
+      megaTrans.set(`${state}-${input}`, megaClosure);
+    }
+  } /*
+  for (let state of enfa.states) {
+    for (let input of enfa.alphabet) {
+      let megaClosure = new Set();
+      megaClosure.union(ctable.get(state));
+      for (let closureState of ctable.get(state)) {
+        let _xyz = enfa.transitions.get(`${closureState}-${input}`) || [];
+
+        // megaTrans.set(`${state}-${input}`, _xyz);
+        for (let _state of _xyz) {
+          megaClosure.add(_state);
+          megaClosure = megaClosure.union(epsilonClosure(_state));
+        }
+      }
+      megaTrans.set(`${state}-${input}`, megaClosure);
+    }
+  }*/
+  console.log("megaTrans", megaTrans);
+
   // Remove epsilon transitions
   for (let [transition, nextStates] of enfa.transitions) {
     if (transition.endsWith("-e")) {
