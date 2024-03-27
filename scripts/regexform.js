@@ -12,7 +12,7 @@ alphabetBtn.addEventListener("click", function makeNFAfromAlphabet() {
   tempnfa.addState("q2");
   tempnfa.addState("q3");
   tempnfa.setStartState("q0");
-  tempnfa.addFinalState("q1");
+  tempnfa.addFinalState("q3");
   tempnfa.addTransition("q0", "0", "q0");
   tempnfa.addTransition("q0", "1", "q1");
   tempnfa.addTransition("q1", "0", "q1");
@@ -23,9 +23,9 @@ alphabetBtn.addEventListener("click", function makeNFAfromAlphabet() {
   tempnfa.addTransition("q2", "1", "q3");
   // tempnfa.addFinalState("q0");
   console.log(tempnfa);
-  makeTableFromNfa(tempnfa, "alphabet-nfa-table");
+  makeTableFromNfa(tempnfa, "alphabet-nfa-table", true);
 });
-function makeTableFromNfa(Xnfa, Xid) {
+function makeTableFromNfa(Xnfa, Xid, editable = false) {
   const tablecontainer = document.getElementById(Xid);
   tablecontainer.innerHTML = "";
   tablecontainer.classList.add("table-container");
@@ -74,34 +74,39 @@ function makeTableFromNfa(Xnfa, Xid) {
       const key = `${state}-${symbol}`;
       var td3 = document.createElement("td");
       td3.classList.add("editable-cell");
-      var input = document.createElement("input");
-      input.type = "text";
-      input.id = key;
+      if (editable) {
+        var input = document.createElement("input");
+        input.type = "text";
+        input.id = key;
 
-      input.classList.add("editable-cell-input");
-      input.addEventListener("change", function () {
-        // updateCell(this);
-        var tempTid = this.id;
-        var tempTvalue = this.value.trim();
-        var isValidFormat = /^q\d+(,q\d+)*$/.test(tempTvalue);
-        if (isValidFormat) {
-          Xnfa.transitions.set(tempTid, tempTvalue.split(","));
+        input.classList.add("editable-cell-input");
+        input.addEventListener("change", function () {
+          // updateCell(this);
+          var tempTid = this.id;
+          var tempTvalue = this.value.trim();
+          var isValidFormat = /^q\d+(,q\d+)*$/.test(tempTvalue);
+          if (isValidFormat) {
+            Xnfa.transitions.set(tempTid, tempTvalue.split(","));
+            // console.log(Xnfa.transitions);
+          } else {
+            alert(
+              "Invalid format. Please use 'q0', 'q1', 'q2', etc., or 'q0,q1,q2,..."
+            );
+            this.value = "";
+          }
           // console.log(Xnfa.transitions);
-        } else {
-          alert(
-            "Invalid format. Please use 'q0', 'q1', 'q2', etc., or 'q0,q1,q2,..."
-          );
-          this.value = "";
+        });
+        // td3.textContent = key;
+        if (Xnfa.transitions.has(key)) {
+          input.value = Xnfa.transitions.get(key);
+          // td3.textContent = Xnfa.transitions.get(key);
         }
-        // console.log(Xnfa.transitions);
-      });
-
-      // td3.textContent = key;
-      if (Xnfa.transitions.has(key)) {
-        input.value = Xnfa.transitions.get(key);
-        // td3.textContent = Xnfa.transitions.get(key);
+        td3.appendChild(input);
+      } else {
+        if (Xnfa.transitions.has(key)) {
+          td3.textContent = Xnfa.transitions.get(key);
+        }
       }
-      td3.appendChild(input);
       row.appendChild(td3);
     }
     table.appendChild(row);

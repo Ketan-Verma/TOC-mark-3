@@ -13,13 +13,16 @@ document
     }
     if (selected == "0") {
       const enfa = regexToENFA(regex)[0];
-      console.log("enfa created", enfa.transitions);
+      console.log("enfa created", enfa);
+      // makeTableFromNfa(enfa, "alphabet-nfa-table", true);
+      makeTransitionTable(enfa, "transition-table-contaner", true);
       drawGraph(enfa);
     } else if (selected == "1") {
       const enfa = regexToENFA(regex)[0];
       console.log("enfa created", enfa);
       const nfa = removeEpsilonTransitions(enfa);
       console.log("emoves removd", nfa);
+      makeTransitionTable(nfa, "transition-table-contaner");
 
       drawGraph(nfa);
     } else if (selected == "2") {

@@ -209,7 +209,7 @@ function regexToENFA(regex) {
       let nfa1 = nfaStack.pop();
       nfa1 = nfa1.plusNFA(states);
       nfaStack.push(nfa1);
-      console.log(nfaStack);
+      // console.log(nfaStack);
     } else if (token == "*") {
       let nfa1 = nfaStack.pop();
       // console.log(nfa1);
@@ -327,4 +327,90 @@ function createNewState(states) {
   // console.log(tempSt);
   states.add(tempSt);
   return tempSt;
+}
+function makeTransitionTable(tempNfa, divId, isENFA = false) {
+  const tablecontainer = document.getElementById(divId);
+  tablecontainer.innerHTML = "";
+  tablecontainer.classList.add("transition-table-container");
+  let table = document.createElement("table");
+  // table.setAttribute("class", "table table-bordered");
+  // table.setAttribute("id", "transition-table");
+  var row0 = document.createElement("tr");
+  var th0 = document.createElement("th");
+  th0.setAttribute("colspan", 2 + tempNfa.alphabet.size + isENFA);
+  th0.textContent = "Transition Table";
+  row0.appendChild(th0);
+  var row1 = document.createElement("tr");
+
+  var th1 = document.createElement("td");
+  th1.setAttribute("rowspan", "2");
+  th1.setAttribute("colspan", "2");
+  th1.textContent = "Present State";
+
+  var th2 = document.createElement("td");
+  if (isENFA) {
+    th2.setAttribute("colspan", tempNfa.alphabet.size + 1);
+  } else {
+    th2.setAttribute("colspan", tempNfa.alphabet.size);
+  }
+  th2.textContent = "Next State";
+  row1.appendChild(th1);
+  row1.appendChild(th2);
+  // Create second row with next state values
+  var row2 = document.createElement("tr");
+  if (isENFA) {
+    var th = document.createElement("th");
+    th.textContent = "ε";
+    row2.appendChild(th);
+  }
+  for (let symbol of tempNfa.alphabet) {
+    var th = document.createElement("th");
+    th.textContent = symbol;
+    row2.appendChild(th);
+  }
+
+  table.appendChild(row0);
+  table.appendChild(row1);
+  table.appendChild(row2);
+
+  // Create rows with transition values
+  for (let state of tempNfa.states) {
+    var row = document.createElement("tr");
+    var td1 = document.createElement("td");
+    var td2 = document.createElement("td");
+    td1.textContent =
+      tempNfa.startState == state && tempNfa.finalStates.has(state)
+        ? "start, final"
+        : tempNfa.startState == state
+        ? "start"
+        : tempNfa.finalStates.has(state)
+        ? "final"
+        : "";
+    td2.textContent = state;
+    row.appendChild(td1);
+    row.appendChild(td2);
+    if (isENFA) {
+      var td3 = document.createElement("td");
+      td3.classList.add("cell");
+      if (tempNfa.transitions.has(`${state}-e`)) {
+        td3.textContent = tempNfa.transitions.get(`${state}-e`);
+      }
+      row.appendChild(td3);
+    }
+    for (let symbol of tempNfa.alphabet) {
+      const key = `${state}-${symbol}`;
+      var td3 = document.createElement("td");
+      td3.classList.add("cell");
+
+      if (tempNfa.transitions.has(key)) {
+        td3.textContent = tempNfa.transitions.get(key);
+      }
+
+      row.appendChild(td3);
+    }
+    table.appendChild(row);
+  }
+
+  // Append table to contaiiner
+  tablecontainer.appendChild(table);
 }

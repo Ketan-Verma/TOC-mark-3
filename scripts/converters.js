@@ -25,6 +25,7 @@ function removeEpsilonTransitions(enfa) {
     ctable.set(state, epsilonClosure(state));
   }
   console.log("ctable", ctable);
+  makeClosureTable(ctable, "closure-table");
   //   mega transaction
   let megaTrans = new Map();
   for (let state of enfa.states) {
@@ -60,47 +61,114 @@ function removeEpsilonTransitions(enfa) {
     }
   }*/
   console.log("megaTrans", megaTrans);
-
+  makeMegaTable(enfa, megaTrans, "mega-table");
   // Remove epsilon transitions
-  for (let [transition, nextStates] of enfa.transitions) {
-    if (transition.endsWith("-e")) {
-      enfa.transitions.delete(transition);
+  // for (let [transition, nextStates] of enfa.transitions) {
+  //   if (transition.endsWith("-e")) {
+  //     enfa.transitions.delete(transition);
 
-      let currentState = transition.split("-")[0];
-      let epsilonClosureStates = epsilonClosure(currentState);
+  //     let currentState = transition.split("-")[0];
+  //     let epsilonClosureStates = epsilonClosure(currentState);
 
-      for (let nextState of nextStates) {
-        for (let state of epsilonClosureStates) {
-          if (enfa.transitions.has(`${state}-${nextState}`)) {
-            enfa.transitions.get(`${state}-${nextState}`).forEach((symbol) => {
-              if (!enfa.transitions.has(`${currentState}-${symbol}`)) {
-                enfa.transitions.set(`${currentState}-${symbol}`, []);
-              }
-              enfa.transitions.get(`${currentState}-${symbol}`).push(nextState);
-            });
-          }
-        }
+  //     for (let nextState of nextStates) {
+  //       for (let state of epsilonClosureStates) {
+  //         if (enfa.transitions.has(`${state}-${nextState}`)) {
+  //           enfa.transitions.get(`${state}-${nextState}`).forEach((symbol) => {
+  //             if (!enfa.transitions.has(`${currentState}-${symbol}`)) {
+  //               enfa.transitions.set(`${currentState}-${symbol}`, []);
+  //             }
+  //             enfa.transitions.get(`${currentState}-${symbol}`).push(nextState);
+  //           });
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+  console.log("state", enfa.states);
+  let tempTrans = new Map();
+  for (const state of enfa.states) {
+    for (const input of enfa.alphabet) {
+      let nextStates = megaTrans.get(`${state}-${input}`);
+      if (nextStates.size == 0) {
+        continue;
       }
+      let nextStatesArray = Array.from(nextStates);
+      tempTrans.set(`${state}-${input}`, nextStatesArray);
     }
   }
-
+  console.log("tempTrans", tempTrans);
+  enfa.transitions = new Map([...tempTrans]);
   return enfa;
 }
 
 // Example usage:
-let enfa = {
-  states: new Set(["q0", "q1", "q2"]),
-  alphabet: new Set(["a", "b"]),
-  startState: "q0",
-  finalStates: new Set(["q2"]),
-  transitions: new Map([
-    ["q0-e", ["q1"]],
-    ["q0-a", ["q1", "q2"]],
-    ["q1-e", ["q2"]],
-    ["q1-b", ["q2"]],
-    ["q2-e", ["q0"]],
-  ]),
-};
 
-enfa = removeEpsilonTransitions(enfa);
-console.log(enfa);
+// enfa = removeEpsilonTransitions(enfa);
+// console.log(enfa);
+
+function makeClosureTable(ctable, containerId) {
+  // return;
+  let container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  let table = document.createElement("div");
+  table.classList.add("table", "table-bordered");
+  let row = document.createElement("h3");
+  row.innerText = "Closure Table";
+  table.appendChild(row);
+  for (let [state, closure] of ctable) {
+    let row = document.createElement("p");
+    row.classList.add("closure-row");
+    let __entries = Array.from(closure);
+    if (__entries.length == 0) {
+      __entries.push("Ø");
+    }
+    row.innerText = state + " = " + __entries.join(", ");
+
+    table.appendChild(row);
+  }
+  container.appendChild(table);
+}
+function makeMegaTable(enfa, megaTrans, containerId) {
+  //row1 > state | input
+  let container = document.getElementById(containerId);
+  container.innerHTML = "";
+  let table = document.createElement("table");
+  table.classList.add("table", "table-bordered");
+  let row = document.createElement("tr");
+  let _th = document.createElement("th");
+  _th.setAttribute("colspan", enfa.alphabet.size + 1);
+  _th.textContent = "Mega Transition Table";
+  row.appendChild(_th);
+  table.appendChild(row);
+  let row1 = document.createElement("tr");
+  row1.classList.add("mega-row");
+  let th1 = document.createElement("th");
+  th1.innerText = "State";
+  row1.appendChild(th1);
+  for (let symbol of enfa.alphabet) {
+    var th = document.createElement("th");
+    th.textContent = symbol;
+    row1.appendChild(th);
+  }
+  table.appendChild(row1);
+  for (let state of enfa.states) {
+    let row = document.createElement("tr");
+    row.classList.add("mega-row");
+    let td = document.createElement("td");
+    td.innerText = state;
+    row.appendChild(td);
+    for (let input of enfa.alphabet) {
+      let td = document.createElement("td");
+      let nextStates = megaTrans.get(`${state}-${input}`) || [];
+      if (nextStates.length == 0) {
+        nextStates.push("Ø");
+      }
+      td.innerText = Array.from(nextStates).join(", ");
+      row.appendChild(td);
+    }
+    table.appendChild(row);
+  }
+
+  container.appendChild(table);
+}
