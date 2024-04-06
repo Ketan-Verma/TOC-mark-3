@@ -4,7 +4,7 @@ let offsetY = 0;
 let isDragging = false;
 function setup() {
   let canvasParent = document.getElementById("canvasContainer");
-  let myCanvas = createCanvas(1200, 400);
+  let myCanvas = createCanvas(1200, 800);
   myCanvas.parent(canvasParent);
   //   drawGraph(nfa);
 }
@@ -81,48 +81,58 @@ function drawGraph(nfa) {
     for (const alphabet of nfa.alphabet) {
       if (nfa.transitions.has(`${currentState}-${alphabet}`)) {
         let st = nfa.transitions.get(`${currentState}-${alphabet}`);
-        // console.log(st, "distance is", _currentStateDistance + 1);
-        // console.log("setting distance", _currentStateDistance + 1, st.length);
-
-        // distanceMap.set(_currentStateDistance + 1, st.length);
-
         st.forEach((element, key) => {
           heigthMap.set(element, heigthMap.get(currentState) + key);
-
           if (!tempVisited.has(key)) {
-            // console.log("visited", visited, key);
-
             let temp = distanceMap.get(_currentStateDistance + 1)
               ? distanceMap.get(_currentStateDistance + 1)
               : 0;
-            // } else {
             distanceMap.set(_currentStateDistance + 1, temp + 1);
             tempVisited.add(key);
-            // distanceMap.set(_currentStateDistance + 1, 0);
           }
           //! if any error use comment code
           // if (!statedistance.has(element)) {
           statedistance.set(element, _currentStateDistance + 1);
-          // }
-
           setStack.push(element);
         });
       }
     }
-
-    // console.log(setStack);
   }
-  console.log("stateDistance", statedistance);
-  console.log("distanceMap", distanceMap);
-  console.log("heigthMap", heigthMap);
+  // console.log("stateDistance", statedistance);
+  distanceMap.clear();
+  for (const [key, value] of statedistance) {
+    if (distanceMap.has(value)) {
+      heigthMap.set(key, distanceMap.get(value));
+    } else {
+      heigthMap.set(key, 0);
+    }
+    distanceMap.set(
+      value,
+      distanceMap.has(value) ? distanceMap.get(value) + 1 : 1
+    );
+  }
+  // console.log("distanceMap", distanceMap);
+  // console.log("heigthMap", heigthMap);
+  let keysArray = Array.from(distanceMap.keys());
+  let compressedStateDistance = new Map();
+  for (let i = 0; i < keysArray.length; i++) {
+    compressedStateDistance.set(keysArray[i], i);
+  }
+  // console.log("keysArray", keysArray);
+  // console.log("compressedStateDistance", compressedStateDistance);
   //? make states
   for (const cuS of visited) {
     // console.log(cuS);
-    let _currentStateDistance = statedistance.get(cuS);
+    let _currentStateDistance = compressedStateDistance.get(
+      statedistance.get(cuS)
+    );
+    // console.log("current state", cuS, "distance", _currentStateDistance);
+    // statedistance.get(cuS);
+    //  1 + indexOfFirstAppearance(keysArray, statedistance.get(cuS));
     let separationVar = 100;
     let x = 60 + 100 * _currentStateDistance;
     //calcualte y
-    let _n = distanceMap.get(_currentStateDistance);
+    let _n = distanceMap.get(statedistance.get(cuS));
     let _gap = Math.floor(((_n - 1) * separationVar) / 2);
     //! adjust height
     let __start =
@@ -135,6 +145,18 @@ function drawGraph(nfa) {
     if (_n % 2 == 0) {
       _1yPos += separationVar / 2;
     }
+    // console.log(
+    //   "1ypos",
+    //   _1yPos,
+    //   "height",
+    //   height / 2,
+    //   "n",
+    //   _n,
+    //   "separation",
+    //   separationVar,
+    //   "heigthMap",
+    //   heigthMap.get(cuS)
+    // );
     y = _1yPos + heigthMap.get(cuS) * separationVar;
     //*    draw the state
     if (nfa.finalStates.has(cuS)) {
@@ -147,6 +169,7 @@ function drawGraph(nfa) {
       line(x - diameter / 2, y, x - 30, y - 5);
     }
     ellipse(x, y, diameter);
+    // console.log("ellipse", cuS, x, y);
     ellipsePos.set(cuS, [x, y]);
     text(cuS, x - 6, y + 4);
     // console.log(currentState, x, y);
@@ -163,106 +186,111 @@ function drawGraph(nfa) {
       edges.set(`${tempArr[0]}-${element}`, [tempArr[1]]);
     }
   }
-  //draw edges
+  console.log("ellipse pos", ellipsePos);
+  // console.log("edges", edges);
+  //! draw edges
   // console.log("look", edges, ellipsePos);
-  for (const edge of edges) {
-    let tempArr = split(edge[0], "-");
-    // console.log("edges", edge[0], edge[1]);
-    let x1 = ellipsePos.get(tempArr[0])[0];
-    let y1 = ellipsePos.get(tempArr[0])[1];
-    let x2 = ellipsePos.get(tempArr[1])[0];
-    let y2 = ellipsePos.get(tempArr[1])[1];
-    let eintersect = findIntersectionPoints(x1, y1, x2, y2, diameter);
-    // let ex1 = eintersect[0];
-    // let ey1 = eintersect[1];
-    // let ex2 = eintersect[2];
-    // let ey2 = eintersect[3] ;
-    // x1 = eintersect[0];
-    // y1 = eintersect[1];
-    // x2 = eintersect[2];
-    // y2 = eintersect[3];
+  // for (const edge of edges) {
+  //   let tempArr = split(edge[0], "-");
+  //   // console.log("edges", edge[0], edge[1]);
 
-    let dirR = 1;
-    if (statedistance.get(tempArr[0]) > statedistance.get(tempArr[1])) {
-      dirR = -1;
-      // console.log("rev");
-    }
-    // Calculate control points
-    let curvature = 0.25; // Adjust the curvature
-    let cx1 = x1;
-    +(x2 - x1) * curvature; // Adjust the multiplier to change the curvature
-    let cy1 = y1 + (y2 - y1) * curvature;
-    let cx2 = x2;
-    -(x2 - x1) * curvature; // Adjust the multiplier to change the curvature
-    let cy2 = y2 - (y2 - y1) * curvature;
-    cx1 = x1;
-    cy1 = y1 + (dist(x1, y1, x2, y2) / 2) * dirR;
-    cx2 = x2;
-    cy2 = y2 + (dist(x1, y1, x2, y2) / 2) * dirR;
-    let t = 0.55; // parameter value (0 <= t <= 1) representing the point on the curve
-    //* bezierTangent()
-    //* 1stpoint,1stcontrol,2ndcontrol,2ndpoint,t
-    let tangx = bezierPoint(x1, cx1, cx2, x2, t);
-    let tangy = bezierPoint(y1, cy1, cy2, y2, t);
+  //   // if (!ellipsePos.get(tempArr[0])[0]) console.log("temoArr");
+  //   console.log("tempArr", tempArr[0]);
+  //   let x1 = ellipsePos.get(tempArr[0])[0];
+  //   let y1 = ellipsePos.get(tempArr[0])[1];
+  //   let x2 = ellipsePos.get(tempArr[1])[0];
+  //   let y2 = ellipsePos.get(tempArr[1])[1];
+  //   let eintersect = findIntersectionPoints(x1, y1, x2, y2, diameter);
+  //   // let ex1 = eintersect[0];
+  //   // let ey1 = eintersect[1];
+  //   // let ex2 = eintersect[2];
+  //   // let ey2 = eintersect[3] ;
+  //   // x1 = eintersect[0];
+  //   // y1 = eintersect[1];
+  //   // x2 = eintersect[2];
+  //   // y2 = eintersect[3];
 
-    // Draw the tangent line
-    let tx = bezierTangent(85, 10, 90, 15, t);
-    let ty = bezierTangent(20, 10, 90, 80, t);
-    let tanga = atan2(ty, tx) + PI;
-    push();
-    stroke(255); // Red color for the tangent line
-    // line(tangx, tangy, cos(_a) * 30 + tangx, sin(_a) * 30 + tangy);
-    pop();
-    push();
-    noFill();
-    // line(x1 + diameter / 2, y1, x2 - diameter / 2, y2);
-    line(x1 + diameter / 2, y1, x2 - diameter / 2, y2);
-    // bezier(x1 + diameter / 2, y1, cx1, cy1, cx2, cy2, x2 - diameter / 2, y2);
-    //* xanchor1,yanc1,xcontrol1,ycontrol1,
-    //* xcontrol2,ycontrol2,xanchor2,yanchor2
-    pop();
-    // / Draw the points for visualization
-    // fill(255, 0, 0); // Control point 1 in red
-    // ellipse(x1, y1, 2, 2);
-    // fill(0, 255, 0); // Control point 2 in green
-    // ellipse(x2, y2, 2, 2);
-    // fill(0, 0, 255); // Curve's control points in blue
-    // ellipse(cx1, cy1, 2, 2);
-    // ellipse(cx2, cy2, 2, 2);
+  //   let dirR = 1;
+  //   if (statedistance.get(tempArr[0]) > statedistance.get(tempArr[1])) {
+  //     dirR = -1;
+  //     // console.log("rev");
+  //   }
+  //   // Calculate control points
+  //   let curvature = 0.25; // Adjust the curvature
+  //   let cx1 = x1;
+  //   +(x2 - x1) * curvature; // Adjust the multiplier to change the curvature
+  //   let cy1 = y1 + (y2 - y1) * curvature;
+  //   let cx2 = x2;
+  //   -(x2 - x1) * curvature; // Adjust the multiplier to change the curvature
+  //   let cy2 = y2 - (y2 - y1) * curvature;
+  //   cx1 = x1;
+  //   cy1 = y1 + (dist(x1, y1, x2, y2) / 2) * dirR;
+  //   cx2 = x2;
+  //   cy2 = y2 + (dist(x1, y1, x2, y2) / 2) * dirR;
+  //   let t = 0.55; // parameter value (0 <= t <= 1) representing the point on the curve
+  //   //* bezierTangent()
+  //   //* 1stpoint,1stcontrol,2ndcontrol,2ndpoint,t
+  //   let tangx = bezierPoint(x1, cx1, cx2, x2, t);
+  //   let tangy = bezierPoint(y1, cy1, cy2, y2, t);
 
-    //state name
-    push();
-    // fill(255, 2, 10);
-    // ellipse(tangx, tangy + 3.5, 1, 1);
-    // noFill();
-    // stroke(0);
-    fill(0);
-    let stateStrTemp = edge[1].join(",");
-    if (true);
-    else if (dirR > 0) {
-      // >
-      // console.log("hello", edge[1]);
-      text(stateStrTemp, tangx - 10, tangy + 18);
-      line(tangx, tangy + 3.5, tangx - 10, tangy - 5 + 3.5);
-      line(tangx, tangy + 3.5, tangx - 10, tangy + 5 + 3.5);
-    } else {
-      // <
-      text(stateStrTemp, tangx - 10, tangy + 15);
-      stroke(255, 0, 0);
-      line(tangx, tangy - 3.5, tangx + 10, tangy - 5 - 3.5);
-      line(tangx, tangy - 3.5, tangx + 10, tangy + 5 - 3.5);
-    }
-    // line(tangx, tangy, cos(tanga) * 30 + tangx, sin(tanga) * 30 + tangy);
-    strokeWeight(3);
+  //   // Draw the tangent line
+  //   let tx = bezierTangent(85, 10, 90, 15, t);
+  //   let ty = bezierTangent(20, 10, 90, 80, t);
+  //   let tanga = atan2(ty, tx) + PI;
+  //   push();
+  //   stroke(255); // Red color for the tangent line
+  //   // line(tangx, tangy, cos(_a) * 30 + tangx, sin(_a) * 30 + tangy);
+  //   pop();
+  //   push();
+  //   noFill();
+  //   // line(x1 + diameter / 2, y1, x2 - diameter / 2, y2);
+  //   line(x1 + diameter / 2, y1, x2 - diameter / 2, y2);
+  //   // bezier(x1 + diameter / 2, y1, cx1, cy1, cx2, cy2, x2 - diameter / 2, y2);
+  //   //* xanchor1,yanc1,xcontrol1,ycontrol1,
+  //   //* xcontrol2,ycontrol2,xanchor2,yanchor2
+  //   pop();
+  //   // / Draw the points for visualization
+  //   // fill(255, 0, 0); // Control point 1 in red
+  //   // ellipse(x1, y1, 2, 2);
+  //   // fill(0, 255, 0); // Control point 2 in green
+  //   // ellipse(x2, y2, 2, 2);
+  //   // fill(0, 0, 255); // Curve's control points in blue
+  //   // ellipse(cx1, cy1, 2, 2);
+  //   // ellipse(cx2, cy2, 2, 2);
 
-    // ellipse(x1, y1, 30);
-    // noFill();
-    // console.log(tempArr[0], x1 - 6, y1 + 4);
-    // text(tempArr[0], x1 - 6, y1 + 4);
-    // text(tempArr[1], x2 - 6, y2 + 4);
-    // text(tempArr[1], (x1 + x2) / 2, (y1 + y2) / 2);
-    pop();
-  }
+  //   //state name
+  //   push();
+  //   // fill(255, 2, 10);
+  //   // ellipse(tangx, tangy + 3.5, 1, 1);
+  //   // noFill();
+  //   // stroke(0);
+  //   fill(0);
+  //   let stateStrTemp = edge[1].join(",");
+  //   if (true);
+  //   else if (dirR > 0) {
+  //     // >
+  //     // console.log("hello", edge[1]);
+  //     text(stateStrTemp, tangx - 10, tangy + 18);
+  //     line(tangx, tangy + 3.5, tangx - 10, tangy - 5 + 3.5);
+  //     line(tangx, tangy + 3.5, tangx - 10, tangy + 5 + 3.5);
+  //   } else {
+  //     // <
+  //     text(stateStrTemp, tangx - 10, tangy + 15);
+  //     stroke(255, 0, 0);
+  //     line(tangx, tangy - 3.5, tangx + 10, tangy - 5 - 3.5);
+  //     line(tangx, tangy - 3.5, tangx + 10, tangy + 5 - 3.5);
+  //   }
+  //   // line(tangx, tangy, cos(tanga) * 30 + tangx, sin(tanga) * 30 + tangy);
+  //   strokeWeight(3);
+
+  //   // ellipse(x1, y1, 30);
+  //   // noFill();
+  //   // console.log(tempArr[0], x1 - 6, y1 + 4);
+  //   // text(tempArr[0], x1 - 6, y1 + 4);
+  //   // text(tempArr[1], x2 - 6, y2 + 4);
+  //   // text(tempArr[1], (x1 + x2) / 2, (y1 + y2) / 2);
+  //   pop();
+  // }
   //   console.log(heigthMap);
   noLoop();
 }
@@ -315,4 +343,12 @@ function findIntersectionPoints(x1, y1, x2, y2, d) {
   var intersectionY2 = y2 + uABy * radius; //midY + (radius / dist) * (y2 - midY);
 
   return [intersectionX1, intersectionY1, intersectionX2, intersectionY2];
+}
+function indexOfFirstAppearance(arr, key) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] === key) {
+      return i;
+    }
+  }
+  return 1; // Key not found in the array
 }

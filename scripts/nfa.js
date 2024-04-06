@@ -38,6 +38,7 @@ class NFA {
 
   setStartState(state) {
     this.startState = state;
+    this.addState(state);
   }
 
   addFinalState(state) {
@@ -83,6 +84,7 @@ class NFA {
     smallnfa.finalStates.forEach((state) => {
       this.addFinalState(state);
     });
+    return this;
   }
   unionNFA(smallnfa, stackelements) {
     // console.log("union stavk", stackelements);
@@ -166,14 +168,71 @@ class NFA {
     return this;
   }
 }
+function applyConcatenation(stack) {
+  let flag = true;
+  while (flag) {
+    flag = false;
+    for (let i = 0; i < stack.length - 1; i++) {
+      // console.log(stack[i], stack[i + 1], typeof stack[i], typeof stack[i + 1]);
+      if (
+        typeof stack[i] == "object" &&
+        typeof stack[i] == typeof stack[i + 1]
+      ) {
+        let nfa1 = stack[i];
+        nfa1 = nfa1.concatenateNFA(stack[i + 1]);
+        stack.splice(i, 2, nfa1);
+        flag = true;
+        break;
+      }
+    }
+  }
 
+  return stack;
+}
+function applySingleOperation(stack, states) {
+  let flag = true;
+  while (flag) {
+    flag = false;
+    for (let i = 0; i < stack.length - 1; i++) {
+      if (typeof stack[i] == "object" && stack[i + 1] == "*") {
+        let nfa1 = stack[i];
+        nfa1.starNFA(states);
+        stack.splice(i, 2, nfa1);
+        flag = true;
+        break;
+      } else if (typeof stack[i] == "object" && stack[i + 1] == "+") {
+        let nfa1 = stack[i];
+        nfa1.plusNFA(states);
+        stack.splice(i, 2, nfa1);
+        flag = true;
+        break;
+      }
+    }
+  }
+  return stack;
+}
+function applyUnion(stack, states) {
+  let flag = true;
+  while (flag) {
+    flag = false;
+    for (let i = 0; i < stack.length - 2; i++) {
+      if (
+        typeof stack[i] == "object" &&
+        typeof stack[i + 2] == "object" &&
+        stack[i + 1] == "|"
+      ) {
+        let nfa1 = stack[i];
+        nfa1.unionNFA(stack[i + 2], states);
+        stack.splice(i, 3, nfa1);
+        flag = true;
+        break;
+      }
+    }
+  }
+  return stack;
+}
 function regexToENFA(regex) {
-  const precedence = {
-    "|": 1,
-    "*": 2,
-    "+": 2,
-  };
-  let nfa = new NFA();
+  // let nfa = new NFA();
   let nfaStack = [];
   let states = new Set();
 
@@ -186,6 +245,7 @@ function regexToENFA(regex) {
       tempnfa1.addState(tempQ1);
       tempnfa1.setStartState(tempQ1);
       tempnfa1.addFinalState(tempQ1);
+      tempnfa1.addTransition(tempQ1, "e", tempQ1);
       nfaStack.push(tempnfa1);
       states = states.union(tempnfa1.states);
       // nfa.concatenateNFA(tempnfa1);
@@ -206,11 +266,15 @@ function regexToENFA(regex) {
       // while (nfaStack.length > 0 && nfaStack[nfaStack.length - 1] !== "(") {}
       nfaStack.push(token);
     } else if (token == "+") {
+      nfaStack.push(token);
+      continue;
       let nfa1 = nfaStack.pop();
       nfa1 = nfa1.plusNFA(states);
       nfaStack.push(nfa1);
       // console.log(nfaStack);
     } else if (token == "*") {
+      nfaStack.push(token);
+      continue;
       let nfa1 = nfaStack.pop();
       // console.log(nfa1);
       nfa1 = nfa1.starNFA(states);
@@ -218,6 +282,8 @@ function regexToENFA(regex) {
     } else if (token === "(") {
       nfaStack.push(token);
     } else if (token === ")") {
+      nfaStack.push(token);
+      continue;
       let tempStack = [];
       while (nfaStack.length > 0 && nfaStack[nfaStack.length - 1] !== "(") {
         // console.log("loop start");
@@ -241,8 +307,8 @@ function regexToENFA(regex) {
           nfa2.concatenateNFA(nfa1);
           nfaStack.push(nfa2);
         }
-        // console.log("loop end");
       }
+      console.log("tempStack", tempStack);
       tempStack = stackLoop(tempStack, states);
       // console.log("tempStack", tempStack);
       nfaStack.pop();
@@ -250,7 +316,66 @@ function regexToENFA(regex) {
     }
   }
   // 0nfa1|2nfa 3nfa|nfa
+  // console.log("raw nfa", nfaStack);
+  let sopnfa = applySingleOperation(nfaStack, states);
+  // console.log("single operation", sopnfa);
+  let nfaConStack = applyConcatenation(sopnfa, states);
+  // console.log("concatenated", nfaConStack);
+  let nfaUnion = applyUnion(nfaConStack, states);
+  // console.log("union", nfaUnion);
+  let rmvParanthesis = nfaUnion.filter((item) => item !== "(" && item !== ")"); //.filter(char => char !== '(' && char !== ')');
+  // console.log("rmvParanthesis", rmvParanthesis);
+  let finalOpNfa = applySingleOperation(rmvParanthesis, states);
+  // console.log("finalOpNfa", finalOpNfa);
+  let finalConNfa = applyConcatenation(finalOpNfa, states);
+  // console.log("finalConNfa", finalConNfa);
+  return finalConNfa[0];
+
   nfaStack = stackLoop(nfaStack, states);
+  //? Sequencing States
+  let nfa = new NFA();
+  nfa = nfaStack[0];
+  // return nfa;
+  let temp_alphabet = nfa.alphabet;
+  // temp_alphabet.add("e");
+  nfa.states.clear();
+  let temp_visited = new Set();
+  let temp_itrStack = [];
+  temp_itrStack.push(nfa.startState);
+  let _DEBUGITR = 0;
+  //while loop itrStack
+  while (temp_itrStack.length > 0) {
+    _DEBUGITR++;
+    if (_DEBUGITR > 100) {
+      alert("Infinite loop detected itrStack");
+      break;
+    }
+
+    let current_state = temp_itrStack.pop();
+    temp_visited.add(current_state);
+    // console.log("current_state", current_state, temp_visited);
+
+    if (temp_visited.has(current_state)) continue;
+    nfa.addState(current_state);
+
+    if (nfa.transitions.has(`${current_state}-e`)) {
+      let st = nfa.transitions.get(`${current_state}-e`);
+      st.forEach((element, key) => {
+        if (!temp_visited.has(element)) temp_itrStack.push(element);
+      });
+    }
+    temp_alphabet.forEach((alphabet) => {
+      if (nfa.transitions.has(`${current_state}-${alphabet}`)) {
+        let st = nfa.transitions.get(`${current_state}-${alphabet}`);
+        st.forEach((element, key) => {
+          // console.log("element", element);
+          if (!temp_visited.has(element)) temp_itrStack.push(element);
+        });
+      }
+    });
+  }
+
+  // console.log("seq state : ");
   //! this is  imp loop
   /*
   let x = 0;
@@ -280,13 +405,20 @@ function regexToENFA(regex) {
     }
     // output = nfaStack.pop();
   }/*/
-  // console.log("final", nfaStack);
-  return nfaStack;
+  console.log("final", nfa);
+  return nfa;
 }
 
 function stackLoop(nfaStack, states) {
   let x = 0;
+  let _DEBUGITR = 0;
   while (nfaStack.length > 1) {
+    if (_DEBUGITR > 100) {
+      alert("Infinite loop detected in stack loop");
+      break;
+    }
+    _DEBUGITR++;
+
     // break;
     // console.log("loop", x, nfaStack.length);
     if (x >= nfaStack.length - 1) x = 0;
@@ -297,11 +429,11 @@ function stackLoop(nfaStack, states) {
       if (nfaStack[x + 3] instanceof NFA) x += 2;
       else if (nfaStack[x + 2] instanceof NFA) {
         nfa2 = nfaStack[x + 2];
-        nfa2.unionNFA(nfa1, states);
+        nfa2 = nfa2.unionNFA(nfa1, states);
         nfaStack.splice(x, 3, nfa2);
       }
     } else if (nfa2 instanceof NFA && nfa1 instanceof NFA) {
-      nfa2.concatenateNFA(nfa1);
+      nfa2 = nfa2.concatenateNFA(nfa1);
       nfaStack.splice(x, 2, nfa2);
     } else {
       // console.log(nfaStack);
@@ -318,9 +450,15 @@ function stackLoop(nfaStack, states) {
 function createNewState(states) {
   let tempSt = "q0";
   // console.log("createNewState loop start");
+  let _DEBUGITR = 0;
   while (states.has(tempSt)) {
+    if (_DEBUGITR > 100) {
+      alert("Infinite loop detected in createNewState");
+      break;
+    }
     let tempstate_no = tempSt.slice(1);
     tempSt = "q" + (parseInt(tempstate_no) + 1);
+    _DEBUGITR++;
     // console.log("createNewState loop", tempSt);
   }
   // console.log("createNewState loop end");
@@ -329,6 +467,7 @@ function createNewState(states) {
   return tempSt;
 }
 function makeTransitionTable(tempNfa, divId, isENFA = false) {
+  // return;
   const tablecontainer = document.getElementById(divId);
   tablecontainer.innerHTML = "";
   tablecontainer.classList.add("transition-table-container");

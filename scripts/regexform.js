@@ -22,7 +22,7 @@ alphabetBtn.addEventListener("click", function makeNFAfromAlphabet() {
   tempnfa.addTransition("q2", "0", "q3");
   tempnfa.addTransition("q2", "1", "q3");
   // tempnfa.addFinalState("q0");
-  console.log(tempnfa);
+  // console.log(tempnfa);
   makeTableFromNfa(tempnfa, "alphabet-nfa-table", true);
 });
 function makeTableFromNfa(Xnfa, Xid, editable = false) {

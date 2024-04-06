@@ -5,6 +5,7 @@ function removeEpsilonTransitions(enfa) {
 
   function epsilonClosure(state) {
     let closure = new Set();
+    closure.add(state);
     let stack = [state];
 
     while (stack.length > 0) {
@@ -24,26 +25,56 @@ function removeEpsilonTransitions(enfa) {
   for (let state of enfa.states) {
     ctable.set(state, epsilonClosure(state));
   }
-  console.log("ctable", ctable);
-  makeClosureTable(ctable, "closure-table");
+  // for (const element of ctable) {
+  //   console.log(ctable.get(element[0]));
+  // }
+  // console.log("ctable", ctable);
+  // makeClosureTable(ctable, "closure-table");
   //   mega transaction
   let megaTrans = new Map();
   for (let state of enfa.states) {
+    // console.log("state is", state);
+    let eclsr = ctable.get(state);
+    // console.log(eclsr);
     for (let input of enfa.alphabet) {
+      // console.log("Ddelta ", state, input);
+      // console.log("closure is", eclsr);
       let megaClosure = new Set();
-      megaClosure = megaClosure.union(ctable.get(state));
-      let _abc = enfa.transitions.get(`${state}-${input}`) || [];
-      megaClosure = megaClosure.union(new Set(_abc));
-      for (let closureState of megaClosure) {
-        let _xyz = enfa.transitions.get(`${closureState}-${input}`) || [];
-        for (let _state of _xyz) {
-          megaClosure.add(_state);
-          megaClosure = megaClosure.union(epsilonClosure(_state));
-        }
+      for (const elmt of eclsr) {
+        let _temp_trans = enfa.transitions.get(`${elmt}-${input}`);
+        // console.log();
+        _temp_trans = _temp_trans ? _temp_trans : [];
+        _temp_trans.forEach((element) => {
+          // console.log(element);
+          // console.log(ctable.get(element));
+          megaClosure = megaClosure.union(ctable.get(element));
+          // console.log("megaclsr", megaClosure);
+        });
       }
       megaTrans.set(`${state}-${input}`, megaClosure);
     }
-  } /*
+  }
+  // for (let state of enfa.states) {
+  //   //q0,q1,q2
+  //   for (let input of enfa.alphabet) {
+  //     //a,b
+  //     let megaClosure = new Set();
+  //     //q0->q0,q1->q1,q2,...
+  //     megaClosure = megaClosure.union(ctable.get(state));
+
+  //     let _abc = enfa.transitions.get(`${state}-${input}`) || [];
+  //     megaClosure = megaClosure.union(new Set(_abc));
+  //     for (let closureState of megaClosure) {
+  //       let _xyz = enfa.transitions.get(`${closureState}-${input}`) || [];
+  //       for (let _state of _xyz) {
+  //         megaClosure.add(_state);
+  //         megaClosure = megaClosure.union(epsilonClosure(_state));
+  //       }
+  //     }
+  //     megaTrans.set(`${state}-${input}`, megaClosure);
+  //   }
+  // }
+  /*
   for (let state of enfa.states) {
     for (let input of enfa.alphabet) {
       let megaClosure = new Set();
@@ -60,8 +91,8 @@ function removeEpsilonTransitions(enfa) {
       megaTrans.set(`${state}-${input}`, megaClosure);
     }
   }*/
-  console.log("megaTrans", megaTrans);
-  makeMegaTable(enfa, megaTrans, "mega-table");
+  // console.log("megaTrans", megaTrans);
+  // makeMegaTable(enfa, megaTrans, "mega-table");
   // Remove epsilon transitions
   // for (let [transition, nextStates] of enfa.transitions) {
   //   if (transition.endsWith("-e")) {
@@ -84,7 +115,7 @@ function removeEpsilonTransitions(enfa) {
   //     }
   //   }
   // }
-  console.log("state", enfa.states);
+  // console.log("state", enfa.states);
   let tempTrans = new Map();
   for (const state of enfa.states) {
     for (const input of enfa.alphabet) {
@@ -96,8 +127,43 @@ function removeEpsilonTransitions(enfa) {
       tempTrans.set(`${state}-${input}`, nextStatesArray);
     }
   }
-  console.log("tempTrans", tempTrans);
+  // console.log("tempTrans", tempTrans);
   enfa.transitions = new Map([...tempTrans]);
+
+  //! removing unreachable states
+  let _rmStart = enfa.startState;
+  let _rmVisited = new Set();
+  let _rmStack = [];
+  _rmStack.push(_rmStart);
+  // _rmVisited.add("qd");
+  while (_rmStack.length > 0) {
+    let current_rm = _rmStack.pop();
+    if (_rmVisited.has(current_rm)) continue;
+    _rmVisited.add(current_rm);
+    for (let letter of enfa.alphabet) {
+      let rm_trans = enfa.transitions.get(`${current_rm}-${letter}`);
+      for (let trm of rm_trans) {
+        _rmStack.push(trm);
+        _rmVisited.add(trm);
+      }
+    }
+  }
+  // console.log("visited", _rmVisited);//
+  let _notVisited = enfa.states.difference(_rmVisited);
+  // console.log("notvisited", _notVisited);
+  enfa.states = _rmVisited;
+  for (const letter of enfa.alphabet) {
+    for (const _rm_state of _notVisited) {
+      enfa.transitions.delete(`${_rm_state}-${letter}`);
+    }
+  }
+  // //! set final states
+  for (let state of enfa.states) {
+    // console.log("state", state, ctable.get(state));
+    if (!ctable.get(state).isDisjointFrom(enfa.finalStates)) {
+      enfa.finalStates.add(state);
+    }
+  }
   return enfa;
 }
 
