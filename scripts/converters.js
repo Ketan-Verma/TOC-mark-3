@@ -164,7 +164,7 @@ function removeEpsilonTransitions(enfa) {
       enfa.finalStates.add(state);
     }
   }
-  return enfa;
+  return [ctable, megaTrans, enfa];
 }
 
 // Example usage:

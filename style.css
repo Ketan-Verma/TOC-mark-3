@@ -150,13 +150,34 @@ td {
   /* border: 2px dotted #666; */
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
 }
-.closure-table p {
-  /* padding: 0.5em 1em; */
-}
+
 #mega-table {
   min-width: fit-content;
 }
 #mega-table table {
   min-width: max-content;
   height: fit-content;
+}
+.main-input-container {
+  margin: auto;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  max-width: 1080px;
+  width: 100%;
+  border-radius: 5px;
+  padding: 1em;
+}
+.solution-container {
+  max-width: 1080px;
+  margin: 1em auto;
+  /* padding: 1em; */
+  background-color: #ffffff;
+  border-radius: 5px;
+  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+}
+.middle-container {
+  /* box-shadow: rgba(149, 157, 165, 0.995) 0px 8px 24px; */
+  margin: auto;
+  /* background-color: #ffffff; */
+  width: fit-content;
 }

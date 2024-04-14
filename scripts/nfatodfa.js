@@ -111,6 +111,7 @@ function makeDfaFromNfa(nfa) {
   }
 
   //!renaming
+  /*
   let renamemap = new Map();
   for (const state of dfa.states) {
     if (state.includes(",")) {
@@ -143,6 +144,6 @@ function makeDfaFromNfa(nfa) {
       else dfa.transitions.set(delta[0], [renamemap.get(delta[1][0])]);
     }
   }
-
+*/
   return dfa;
 }

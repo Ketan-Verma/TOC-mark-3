@@ -1,5 +1,32 @@
 function minimizedfa(dfa) {
-  console.log("dfa", dfa);
+  // console.log("dfa", dfa);
+  //! removing unreachable states
+  let _rmStart = dfa.startState;
+  let _rmVisited = new Set();
+  let _rmStack = [];
+  _rmStack.push(_rmStart);
+  // _rmVisited.add("qd");
+  while (_rmStack.length > 0) {
+    let current_rm = _rmStack.pop();
+    if (_rmVisited.has(current_rm)) continue;
+    _rmVisited.add(current_rm);
+    for (let letter of dfa.alphabet) {
+      let rm_trans = dfa.transitions.get(`${current_rm}-${letter}`);
+      for (let trm of rm_trans) {
+        _rmStack.push(trm);
+        _rmVisited.add(trm);
+      }
+    }
+  }
+  // console.log("visited", _rmVisited);
+  let _notVisited = dfa.states.difference(_rmVisited);
+  // console.log("notvisited", _notVisited);
+  dfa.states = _rmVisited;
+  for (const letter of dfa.alphabet) {
+    for (const _rm_state of _notVisited) {
+      dfa.transitions.delete(`${_rm_state}-${letter}`);
+    }
+  }
   let min_dfa = new NFA();
   min_dfa.setStartState(dfa.startState);
   min_dfa.alphabet = dfa.alphabet;
@@ -154,33 +181,23 @@ function minimizedfa(dfa) {
       }
     }
   }
-  //! removing unreachable states
-  let _rmStart = min_dfa.startState;
-  let _rmVisited = new Set();
-  let _rmStack = [];
-  _rmStack.push(_rmStart);
-  // if (deadreq) _rmVisited.add("qd");
-  while (_rmStack.length > 0) {
-    let current_rm = _rmStack.pop();
-    if (_rmVisited.has(current_rm)) continue;
-    _rmVisited.add(current_rm);
-    for (let letter of min_dfa.alphabet) {
-      let rm_trans = min_dfa.transitions.get(`${current_rm}-${letter}`);
-      for (let trm of rm_trans) {
-        _rmStack.push(trm);
-        _rmVisited.add(trm);
+  //! dead transition
+  let deadreq = false;
+  for (const state of min_dfa.states) {
+    for (const letter of min_dfa.alphabet) {
+      if (!min_dfa.transitions.has(`${state}-${letter}`)) {
+        min_dfa.addTransition(state, letter, "qd");
+        deadreq = true;
+        // console.log("dead", state, letter);
       }
     }
   }
-  // console.log("visited", _rmVisited);
-  let _notVisited = min_dfa.states.difference(_rmVisited);
-  // console.log("notvisited", _notVisited);
-  min_dfa.states = _rmVisited;
-  for (const letter of min_dfa.alphabet) {
-    for (const _rm_state of _notVisited) {
-      min_dfa.transitions.delete(`${_rm_state}-${letter}`);
-    }
-  }
+  // if (deadreq) {
+  //   min_dfa.addState("qd");
+  //   for (const letter of min_dfa.alphabet) {
+  //     // min_dfa.addTransition("qd", letter, "qd");
+  //   }
+  // }
   /*/!renaming
   let renamemap = new Map();
   for (const state of min_dfa.states) {
@@ -215,7 +232,7 @@ function minimizedfa(dfa) {
     }
   }*/
   // console.log("min_dfa", min_dfa);
-  return min_dfa;
+  return [_notVisited, partition, min_dfa];
 }
 
 /*/   let min_dfa = new NFA();
