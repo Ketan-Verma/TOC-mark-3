@@ -181,3 +181,32 @@ td {
   /* background-color: #ffffff; */
   width: fit-content;
 }
+.graph-overlay {
+  /* display: none; */
+  background-color: white;
+  margin: 2em;
+  border: dodgerblue dotted 2px;
+  z-index: 10;
+  background-color: #fdfeff;
+  border-radius: 5px;
+  box-shadow: rgba(0, 0, 0, 0.56) 0px 22px 70px 4px;
+  max-width: 1080px;
+  top: 0;
+  position: fixed;
+}
+.graph-container {
+  max-height: 100vh;
+  max-width: 100vw;
+}
+#graph-button {
+  display: none;
+  z-index: 100;
+  position: fixed;
+  top: 10px;
+
+  right: 20px;
+}
+#logo {
+  width: 2em;
+  margin: 0;
+}

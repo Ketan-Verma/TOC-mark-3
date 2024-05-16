@@ -1,18 +1,27 @@
 let main_container = document.getElementById("solution-container");
+let parnetENFA = null;
+let parnetNFA = null;
+let parnetDFA = null;
+let parnetMDFA = null;
 createSolution();
 function createSolution() {
   // console.log("CreateEvent.js loaded!");
   let regex = document.getElementById("regex-input").value;
   const _ENFA = regexToENFA(regex);
   const _ENFA1 = regexToENFA(regex);
+  parnetENFA = _ENFA1;
+
   const _NFA = removeEpsilonTransitions(_ENFA);
   // console.log("enfa", _NFA[0]);
   // console.log("enfa", _NFA[1]);
   const tempNFA = _NFA[2];
+  parnetNFA = tempNFA;
   const _DFA = makeDfaFromNfa(tempNFA);
   const _DFA1 = makeDfaFromNfa(tempNFA);
+  parnetDFA = _DFA1;
   let _minDFA = minimizedfa(_DFA);
   let _minDFA1 = minimizedfa(_DFA);
+  parnetMDFA = _minDFA1;
   // console.log("unreachable", _minDFA[0]);
   // console.log(_minDFA[1]);
   // console.log(_minDFA[2]);
@@ -47,6 +56,11 @@ function createSolution() {
           }</div><br/>
 
           <h3>Graph</h3>
+         
+          <button class="btn btn-primary" id="button-1a">Open Graph</button>
+          
+          <div class="graph-container" id="graph1">
+        </div>
         </div>
       </div>
     </div>
@@ -93,6 +107,10 @@ function createSolution() {
             makeTransitionHtml(_NFA[2]).innerHTML
           }</div><br/>
           <h2>NFA Graph</h2>
+          <button class="btn btn-primary" id="button-2a">Open Graph</button>
+
+          <div class="graph-container" id="graph2">
+        </div>
         </div>
       </div>
     </div>
@@ -123,6 +141,10 @@ function createSolution() {
           ${makeTransitionHtml(_DFA1).innerHTML}
           </div><br/>
           <h3>Graph</h3>
+          <button class="btn btn-primary" id="button-3a">Open Graph</button>
+
+          <div class="graph-container" id="graph3">
+        </div>
         </div>
       </div>
     </div>
@@ -166,6 +188,10 @@ function createSolution() {
           ${makeTransitionHtml(_minDFA[2]).innerHTML}
           </div>         <br/>
           <h3>Graph</h3>
+          <button class="btn btn-primary" id="button-4a">Open Graph</button>
+
+          <div class="graph-container" id="graph4">
+        </div>
         </div>
       </div>
     </div>
@@ -306,8 +332,8 @@ function ShowPartitions(partitions) {
 
 function drawDiagram(f_a) {
   // const container = document.getElementById(containerId);
-  container = "This os a graph";
-  console.log("f_a", f_a);
+  container = "";
+  // console.log("f_a", f_a);
   let distances = new Map();
   let start = f_a.startState;
   let visited = new Set();
@@ -332,7 +358,7 @@ function drawDiagram(f_a) {
       }
     }
   }
-  console.log("distances", distances);
+  // console.log("distances", distances);
   let heightmap = new Map();
   let stateDistance = new Map();
   for (let [state, distance] of distances) {
@@ -353,14 +379,63 @@ function drawDiagram(f_a) {
       heightmap.set(distance, 1);
     }
   }
-  console.log("state distance", stateDistance);
-  console.log("heightmap", heightmap);
+  // console.log("state distance", stateDistance);
+  // console.log("heightmap", heightmap);
   let ypos = new Map();
   for (let [xpos, value] of distances) {
     let ys = heightmap.get(value);
     let y = 0;
-    console.log(xpos, "x =", value);
-    console.log("y =", y);
+    // console.log(xpos, "x =", value);
+    // console.log("y =", y);
   }
   return container;
 }
+
+const graphbutton = document.getElementById("graph-button");
+const modal = document.getElementById("graph-overlay");
+const button1 = document.getElementById("button-1a");
+const graph1 = document.getElementById("graph1");
+const button2 = document.getElementById("button-2a");
+const graph2 = document.getElementById("graph2");
+const button3 = document.getElementById("button-3a");
+const graph3 = document.getElementById("graph3");
+const button4 = document.getElementById("button-4a");
+const graph4 = document.getElementById("graph4");
+
+// Add event listeners to the buttons
+graphbutton.addEventListener("click", function (event) {
+  // console.log("button Clicked", parnetENFA);
+  // makeNetworkFromNfa(parnetENFA);
+  modal.style.display = "none";
+  graphbutton.style.display = "none";
+});
+button1.addEventListener("click", function () {
+  // console.log("button Clicked", parnetENFA);
+  graphbutton.style.display = "block";
+  modal.style.display = "block";
+  makeNetworkFromNfa(parnetENFA);
+});
+
+button2.addEventListener("click", function () {
+  // console.log("button Clicked", parnetNFA);
+  // Code to be executed when button 2 is clicked
+  modal.style.display = "block";
+  graphbutton.style.display = "block";
+  makeNetworkFromNfa(parnetNFA);
+});
+
+button3.addEventListener("click", function () {
+  // Code to be executed when button 3 is clicked
+  // console.log("button Clicked", parnetDFA);
+  modal.style.display = "block";
+  graphbutton.style.display = "block";
+  makeNetworkFromNfa(parnetDFA);
+});
+
+button4.addEventListener("click", function () {
+  // Code to be executed when button 4 is clicked
+  // console.log("button Clicked", parnetMDFA[2]);
+  modal.style.display = "block";
+  graphbutton.style.display = "block";
+  makeNetworkFromNfa(parnetMDFA[2]);
+});
