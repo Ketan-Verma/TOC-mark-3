@@ -29,7 +29,6 @@ function createSolution() {
   class="p-3 text-primary-emphasis bg-primary-subtle border border-primary-subtle rounded-3"
 >
   <h1>Solution</h1>
-  <div>${drawDiagram(_minDFA1[2])}</div>
   <div class="accordion" id="accordionPanelsStayOpenExample">
     <div class="accordion-item">
       <h2 class="accordion-header">
